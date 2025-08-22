@@ -34,9 +34,9 @@ on:
         default: 'build/,dist/'
         type: string
       dockerfile-path:
-        description: 'Path to Dockerfile (use Dockerfile.nextjs for Next.js, Dockerfile.generic for generic builds)'
+        description: 'Path to Dockerfile'
         required: false
-        default: 'Praxis-Innovations/github-actions/Dockerfile.nextjs@main'
+        default: './Dockerfile.nextjs'
         type: string
       docker-context:
         description: 'Docker build context'
@@ -161,7 +161,7 @@ jobs:
     - name: Get package version
       id: package-version
       run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-          
+      
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
