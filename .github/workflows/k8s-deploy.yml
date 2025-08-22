@@ -1,0 +1,131 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      manifests-path:
+        description: 'Path to Kubernetes manifests directory or file'
+        required: false
+        default: './k8s'
+        type: string
+      namespace:
+        description: 'Kubernetes namespace to deploy to (will be created if it doesn\'t exist)'
+        required: false
+        default: 'default'
+        type: string
+      wait-for-rollout:
+        description: 'Whether to wait for deployment rollout to complete'
+        required: false
+        default: true
+        type: boolean
+      timeout:
+        description: 'Timeout for rollout in seconds'
+        required: false
+        default: '300'
+        type: string
+      dry-run:
+        description: 'Perform a dry run without applying changes'
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      GKE_SA_KEY:
+        required: true
+      GKE_CLUSTER_NAME:
+        required: true
+      GKE_CLUSTER_ZONE:
+        required: true
+      GKE_PROJECT_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Google Auth
+      uses: google-github-actions/auth@v1
+      with:
+        credentials: ${{ secrets.GKE_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
+          --zone ${{ secrets.GKE_CLUSTER_ZONE }} \
+          --project ${{ secrets.GKE_PROJECT_ID }}
+        
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Create namespace if it doesn't exist
+      run: |
+        kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+        
+    - name: Validate Kubernetes manifests
+      run: |
+        if [ -d "${{ inputs.manifests-path }}" ]; then
+          # Directory - validate all yaml files
+          for file in ${{ inputs.manifests-path }}/*.yaml ${{ inputs.manifests-path }}/*.yml; do
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+              kubectl apply --dry-run=client -f "$file"
+            fi
+          done
+        elif [ -f "${{ inputs.manifests-path }}" ]; then
+          # Single file
+          echo "Validating $file..."
+          kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
+        else
+          echo "Error: Manifests path '${{ inputs.manifests-path }}' not found"
+          exit 1
+        fi
+        
+    - name: Deploy to Kubernetes
+      run: |
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
+          echo "DRY RUN - No changes will be applied"
+          kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
+        else
+          if [ -d "${{ inputs.manifests-path }}" ]; then
+            # Directory - apply all yaml files
+            kubectl apply -f "${{ inputs.manifests-path }}"
+          else
+            # Single file
+            kubectl apply -f "${{ inputs.manifests-path }}"
+          fi
+        fi
+        
+    - name: Wait for rollout (if enabled)
+      if: inputs.wait-for-rollout == 'true' && inputs.dry-run == 'false'
+      run: |
+        # Find all deployments in the namespace
+        deployments=$(kubectl get deployments -n ${{ inputs.namespace }} -o jsonpath='{.items[*].metadata.name}')
+        
+        for deployment in $deployments; do
+          echo "Waiting for deployment $deployment to rollout..."
+          kubectl rollout status deployment/$deployment -n ${{ inputs.namespace }} --timeout=${{ inputs.timeout }}s
+        done
+        
+    - name: Verify deployment
+      if: inputs.dry-run == 'false'
+      run: |
+        echo "=== Deployment Status ==="
+        kubectl get deployments -n ${{ inputs.namespace }}
+        
+        echo "=== Pod Status ==="
+        kubectl get pods -n ${{ inputs.namespace }}
+        
+        echo "=== Service Status ==="
+        kubectl get services -n ${{ inputs.namespace }}
+        
+        echo "=== Ingress Status ==="
+        kubectl get ingress -n ${{ inputs.namespace }} 2>/dev/null || echo "No ingress found"
