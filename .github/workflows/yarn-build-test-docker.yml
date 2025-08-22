@@ -182,7 +182,7 @@ jobs:
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
           PROJECT_TYPE=${{ inputs.project-type }}
-          BUILD_OUTPUT_DIR=${{ inputs.build-output-dirs.split(',')[0] }}
+          BUILD_OUTPUT_DIR=${{ inputs.build-output-dirs }}
           START_COMMAND=${{ inputs.start-command }}
           PORT=${{ inputs.port }}
           YARN_VERSION=${{ inputs.yarn-version }}
