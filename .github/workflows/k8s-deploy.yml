@@ -99,7 +99,7 @@ jobs:
         
     - name: Deploy to Kubernetes
       run: |
-        if [ "${{ inputs.dry-run }}" = "true" ]; then
+        if [ "${{ inputs.dry-run }}" = true ]; then
           echo "DRY RUN - No changes will be applied"
           if [ -f "${{ inputs.manifests-path }}/kustomization.yaml" ]; then
             kustomize build "${{ inputs.manifests-path }}" | kubectl apply --dry-run=client -f -
@@ -122,7 +122,7 @@ jobs:
         fi
         
     - name: Wait for rollout (if enabled)
-      if: inputs.wait-for-rollout == 'true' && inputs.dry-run == 'false'
+      if: inputs.wait-for-rollout && inputs.dry-run == false
       run: |
         # Find all deployments in the namespace
         deployments=$(kubectl get deployments -n ${{ inputs.namespace }} -o jsonpath='{.items[*].metadata.name}')
@@ -133,7 +133,7 @@ jobs:
         done
         
     - name: Verify deployment
-      if: inputs.dry-run == 'false'
+      if: inputs.dry-run == false
       run: |
         echo "=== Deployment Status ==="
         kubectl get deployments -n ${{ inputs.namespace }}
