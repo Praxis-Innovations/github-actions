@@ -1,4 +1,4 @@
-name: Yarn Build and Docker
+name: Yarn Build, Test, and Docker
 
 on:
   workflow_call:
@@ -11,7 +11,7 @@ on:
       project-type:
         description: 'Project type (react, nextjs, express, generic)'
         required: false
-        default: 'nextjs'
+        default: 'generic'
         type: string
       build-command:
         description: 'Yarn build command to run'

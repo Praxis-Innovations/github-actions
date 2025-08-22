@@ -1,7 +1,7 @@
 # Example workflow for Next.js projects
 # Copy this to your Next.js project and customize as needed
 
-name: Next.js Build and Docker
+name: Next.js Build, Test, and Docker
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-and-docker:
-    uses: Praxis-Innovations/github-actions/.github/workflows/reusable-build-docker.yml@main
+    uses: Praxis-Innovations/github-actions/.github/workflows/yarn-build-test-docker.yml@main
     with:
       node-version: '18'
       project-type: 'nextjs'
