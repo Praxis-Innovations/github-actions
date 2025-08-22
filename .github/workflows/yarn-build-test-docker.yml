@@ -66,7 +66,7 @@ on:
       enable-yarn-berry:
         description: 'Enable Yarn Berry (2.x/3.x) features'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 env:
@@ -94,7 +94,7 @@ jobs:
         cache: 'yarn'
         
     - name: Enable Yarn Berry (if requested)
-      if: inputs.enable-yarn-berry == 'true'
+      if: inputs.enable-yarn-berry
       run: |
         corepack enable
         yarn set version ${{ inputs.yarn-version }}
