@@ -9,7 +9,7 @@ on:
         default: './k8s'
         type: string
       namespace:
-        description: 'Kubernetes namespace to deploy to (will be created if it doesn\'t exist)'
+        description: 'Kubernetes namespace to deploy to (will be created if it doesnot exist)'
         required: false
         default: 'default'
         type: string
