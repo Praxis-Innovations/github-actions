@@ -34,9 +34,9 @@ on:
         default: 'build/,dist/'
         type: string
       dockerfile-path:
-        description: 'Path to Dockerfile (use Dockerfile.generic for generic builds)'
+        description: 'Path to Dockerfile'
         required: false
-        default: './Dockerfile.generic'
+        default: './Dockerfile.nextjs'
         type: string
       docker-context:
         description: 'Docker build context'
@@ -158,17 +158,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix={{branch}}-
+    - name: Get package version
+      id: package-version
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
@@ -177,8 +169,7 @@ jobs:
         file: ${{ inputs.dockerfile-path }}
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ env.IMAGE_NAME }}:${{ steps.package-version.outputs.version }}
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
           PROJECT_TYPE=${{ inputs.project-type }}
