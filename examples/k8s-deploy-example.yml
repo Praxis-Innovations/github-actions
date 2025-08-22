@@ -26,7 +26,7 @@ jobs:
       manifests-path: './k8s'
       namespace: ${{ github.event.inputs.namespace || 'production' }}
       wait-for-rollout: true
-      timeout: '300'
+      timeout: 300
       dry-run: ${{ github.event.inputs.dry-run || false }}
     secrets:
       GKE_SA_KEY: ${{ secrets.GKE_SA_KEY }}

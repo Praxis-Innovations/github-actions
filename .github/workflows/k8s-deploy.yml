@@ -21,8 +21,8 @@ on:
       timeout:
         description: 'Timeout for rollout in seconds'
         required: false
-        default: '300'
-        type: string
+        default: 300
+        type: number
       dry-run:
         description: 'Perform a dry run without applying changes'
         required: false
@@ -99,7 +99,7 @@ jobs:
         
     - name: Deploy to Kubernetes
       run: |
-        if [ "${{ inputs.dry-run }}" = true ]; then
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
           echo "DRY RUN - No changes will be applied"
           if [ -f "${{ inputs.manifests-path }}/kustomization.yaml" ]; then
             kustomize build "${{ inputs.manifests-path }}" | kubectl apply --dry-run=client -f -
