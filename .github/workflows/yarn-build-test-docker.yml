@@ -34,9 +34,9 @@ on:
         default: 'build/,dist/'
         type: string
       dockerfile-path:
-        description: 'Path to Dockerfile'
+        description: 'Path to Dockerfile (use Dockerfile.nextjs for Next.js, Dockerfile.generic for generic builds)'
         required: false
-        default: './Dockerfile.nextjs'
+        default: 'Praxis-Innovations/github-actions/Dockerfile.nextjs@main'
         type: string
       docker-context:
         description: 'Docker build context'
