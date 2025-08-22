@@ -66,13 +66,21 @@ jobs:
       with:
         version: 'latest'
         
+    - name: Set up Kustomize
+      uses: imranismail/setup-kustomize@v1
+      with:
+        kustomize-version: 'v5.0.0'
+        
     - name: Create namespace if it doesn't exist
       run: |
         kubectl create namespace ${{ inputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
         
     - name: Validate Kubernetes manifests
       run: |
-        if [ -d "${{ inputs.manifests-path }}" ]; then
+        if [ -f "${{ inputs.manifests-path }}/kustomization.yaml" ]; then
+          echo "Validating with Kustomize..."
+          kustomize build "${{ inputs.manifests-path }}" | kubectl apply --dry-run=client -f -
+        elif [ -d "${{ inputs.manifests-path }}" ]; then
           # Directory - validate all yaml files
           for file in ${{ inputs.manifests-path }}/*.yaml ${{ inputs.manifests-path }}/*.yml; do
             if [ -f "$file" ]; then
@@ -82,7 +90,7 @@ jobs:
           done
         elif [ -f "${{ inputs.manifests-path }}" ]; then
           # Single file
-          echo "Validating $file..."
+          echo "Validating ${{ inputs.manifests-path }}..."
           kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
         else
           echo "Error: Manifests path '${{ inputs.manifests-path }}' not found"
@@ -93,9 +101,18 @@ jobs:
       run: |
         if [ "${{ inputs.dry-run }}" = "true" ]; then
           echo "DRY RUN - No changes will be applied"
-          kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
+          if [ -f "${{ inputs.manifests-path }}/kustomization.yaml" ]; then
+            kustomize build "${{ inputs.manifests-path }}" | kubectl apply --dry-run=client -f -
+          elif [ -d "${{ inputs.manifests-path }}" ]; then
+            kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
+          else
+            kubectl apply --dry-run=client -f "${{ inputs.manifests-path }}"
+          fi
         else
-          if [ -d "${{ inputs.manifests-path }}" ]; then
+          if [ -f "${{ inputs.manifests-path }}/kustomization.yaml" ]; then
+            echo "Deploying with Kustomize..."
+            kustomize build "${{ inputs.manifests-path }}" | kubectl apply -f -
+          elif [ -d "${{ inputs.manifests-path }}" ]; then
             # Directory - apply all yaml files
             kubectl apply -f "${{ inputs.manifests-path }}"
           else

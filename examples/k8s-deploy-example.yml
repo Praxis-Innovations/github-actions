@@ -1,6 +1,7 @@
 # Example workflow for deploying to GKE
 # Copy this to your project and customize as needed
 # Make sure you have your Kubernetes manifests in the ./k8s directory
+# If using Kustomize, ensure you have a kustomization.yaml file
 
 name: Deploy to GKE
 

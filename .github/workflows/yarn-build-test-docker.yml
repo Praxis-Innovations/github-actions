@@ -169,7 +169,9 @@ jobs:
         file: ${{ inputs.dockerfile-path }}
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: ${{ env.IMAGE_NAME }}:${{ steps.package-version.outputs.version }}
+        tags: |
+          ${{ env.IMAGE_NAME }}:${{ steps.package-version.outputs.version }}
+          ${{ env.IMAGE_NAME }}:latest
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
           PROJECT_TYPE=${{ inputs.project-type }}
