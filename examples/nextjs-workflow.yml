@@ -22,8 +22,10 @@ jobs:
       build-output-dirs: '.next/,public/'
       dockerfile-path: './Dockerfile.nextjs'
       docker-context: '.'
-      registry: 'ghcr.io'
-      image-name: 'your-nextjs-app'
+      image-name: 'nextjs-app'
       port: '3000'
       yarn-version: '1.x'
       enable-yarn-berry: false
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
